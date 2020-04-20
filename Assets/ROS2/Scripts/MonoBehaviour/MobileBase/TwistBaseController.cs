@@ -20,6 +20,10 @@ public class TwistBaseController : MonoBehaviourRosNode
     public Vector3 commandVelocityLinear = Vector3.zero;
     public Vector3 commandVelocityAngular = Vector3.zero;
 
+    private bool currentLinearAccelerationInitialized = false;
+    private Vector3 lastVelocity = Vector3.zero;
+    public Vector3 currentLinearAcceleration = Vector3.zero;
+
     protected override string nodeName { get { return NodeName; } }
 
     private Subscription<geometry_msgs.msg.Twist> commandVelocitySubscription;
@@ -55,6 +59,13 @@ public class TwistBaseController : MonoBehaviourRosNode
         deltaPosition = BaseRigidbody.transform.TransformDirection(deltaPosition);
         Quaternion deltaRotation = Quaternion.Euler(-commandVelocityAngular * Mathf.Rad2Deg * Time.fixedDeltaTime);
 
+        if (currentLinearAccelerationInitialized)
+        {
+            currentLinearAcceleration = (commandVelocityLinear - lastVelocity) / Time.fixedDeltaTime;
+        }
+        currentLinearAccelerationInitialized = true;
+        lastVelocity = commandVelocityLinear;
+        
         BaseRigidbody.MovePosition(BaseRigidbody.position + deltaPosition);
         BaseRigidbody.MoveRotation(BaseRigidbody.rotation * deltaRotation);
     }
