@@ -1,4 +1,9 @@
-FROM dynorobotics/balena-amd64-node-ros2:dashing
+FROM ros:dashing-ros-base
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ros-dashing-rmw-cyclonedds-cpp
+
+####
 
 ENV DEPENDENCIES_WS /opt/dependencies_ws
 RUN mkdir -p $DEPENDENCIES_WS/src
@@ -7,19 +12,18 @@ WORKDIR $DEPENDENCIES_WS
 
 COPY ros2_dependencies.repos $DEPENDENCIES_WS/
 RUN vcs import src < ros2_dependencies.repos
-# RUN vcs import src < src/navigation2/tools/ros2_dependencies.repos
 
 # Remove this so that we don't need to build gazebo_ros_pkgs
 RUN rm -r src/navigation2/nav2_system_tests
 
 # install dependencies
-RUN . $ROS2_WS/install/setup.sh && \
+RUN . /opt/ros/dashing/setup.sh && \
     apt-get update && rosdep install -q -y \
       --from-paths src \
       --ignore-src \
     && rm -rf /var/lib/apt/lists/*
 
-RUN . $ROS2_WS/install/setup.sh && \
+RUN . /opt/ros/dashing/setup.sh && \
      colcon build \
        --symlink-install \
        --cmake-args   \
